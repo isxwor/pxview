@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link rel="preconnect" href="https://www.instagram.com/" crossorigin>
+    <link rel="dns-prefetch" href="https://www.instagram.com/">
+    
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="Download Full-size Instagram Profile Pictures.">
+    <meta name="viewport" content="width=device-width, initial-scale=1">	
+    <title>PxView | InstaDP Downloader</title>
+    
+    <meta name="msapplication-tap-highlight" content="no">
+    <link rel="manifest" href="/manifest.json">
+    
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="Pxview">
+    <link rel="icon" sizes="192x192" href="images/touch/chrome-touch-icon-192x192.png">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Pxview">
+    <link rel="apple-touch-icon" href="images/touch/apple-touch-icon.png">
+    
+    <meta name="msapplication-TileImage" content="images/touch/ms-touch-icon-144x144.png">
+    <meta name="msapplication-TileColor" content="#2F3BA2">
+    <meta name="theme-color" content="#212A32">
+    
+	<link rel="stylesheet" href="css/style.css">
+    <noscript>
+	  You need to enable JavaScript to run this app.
+    </noscript>
+  </head>
+  <body>
+    <header>
+      <h1>Px<span>View</span></h1>
+    </header>
+    <form id="form">
+      <input id="username" type="text" placeholder="username" autocomplete="off" required/>
+      <button type="submit" aria-label="search">
+        <svg version="1.0" xmlns="http://www.w3.org/2000/svg" width="100%" height="1200" viewBox="0 0 52 52">
+		  <path d="M21.6691+0.0173168C9.73584+0.0173168+0.0155554+9.7376+0.0155554+21.6709C0.0155554+33.6042+9.73584+43.3245+21.6691+43.3245C26.8584+43.3245+31.6241+41.4817+35.3591+38.4228L48.2878+51.3515C48.8309+51.9172+49.6374+52.145+50.3962+51.9472C51.155+51.7494+51.7476+51.1568+51.9455+50.398C52.1433+49.6392+51.9154+48.8327+51.3498+48.2896L38.4211+35.3609C41.48+31.6259+43.3227+26.8602+43.3227+21.6709C43.3227+9.7376+33.6024+0.0173168+21.6691+0.0173168ZM21.6691+4.34803C31.2619+4.34803+38.992+12.0781+38.992+21.6709C38.992+31.2637+31.2619+38.9938+21.6691+38.9938C12.0763+38.9938+4.34627+31.2637+4.34627+21.6709C4.34627+12.0781+12.0763+4.34803+21.6691+4.34803Z"/>
+        </svg>
+      </button>
+    </form>
+    <div id="result"></div>
+    <div id="spinner"></div>
+    <footer>
+      Version 2.0.0
+    </footer>
+    
+    <script type="text/javascript">
+      document.addEventListener('DOMContentLoaded', _ => {
+        let form = document.getElementById('form');
+        let inputEl = form.children[0];
+        let searchBtn = form.children[1];
+        let parentNode = document.getElementById('result');
+        let spinner = document.getElementById('spinner');
+        let translate = true;
+        
+        form.onsubmit = e => {
+          e.preventDefault();
+          parentNode.innerHTML = '';
+          displaySpinner(true);
+          username = inputEl.value;
+          
+          loadImage(username);
+        };
+        
+        
+        function loadImage(username) {					
+          let url = `https://www.instagram.com/${username}/?__a=1`;
+          
+          fetch(url)
+            .then(response => {
+              if (!response.ok) {
+                throw new Error("Username not found");
+              }
+              
+              const contentType = response.headers.get('content-type');
+              if (!contentType || !contentType.includes('application/json')) {
+                throw new TypeError("No JSON repsone");
+              }
+              
+              return response.json();
+            })
+            .then(data => data.graphql.user.profile_pic_url_hd)
+            .then(imgURL => fetch(imgURL))
+            .then(response => response.blob())
+            .then(blob => displayImage(username, blob))
+            .catch(error => displayError(error));
+        }
+        
+        
+        function displayImage(username, blob) {
+          let objectURL = URL.createObjectURL(blob);
+          let fileName = `${username}_${Math.floor(Math.random() * 1000 + 1)}`;
+          
+          let image = document.createElement('img');
+          image.id = "image";
+          image.src = objectURL;
+          
+          let a = document.createElement('a');
+          a.id = "dl_link";
+          a.href = objectURL;
+          a.download = fileName;
+          a.className = 'download';
+          a.rel = 'noreferrer';
+          a.innerText = 'DOWNLOAD'
+          
+          displaySpinner(false);
+          
+          if (translate) {
+            document.querySelector('header').style.padding = '5vh 0';
+            translate = false;
+          }
+          
+          parentNode.append(image, a);
+        }
+        
+        
+        function displayError(error) {
+          displaySpinner(false);
+          parentNode.innerHTML = error.message;
+        }
+        
+        
+        function displaySpinner(display) {
+          if (display) {
+            searchBtn.style.pointerEvents = 'none';
+            spinner.classList.add('display');
+          } else {
+            searchBtn.style.pointerEvents = 'auto';
+            spinner.classList.remove('display');
+          }
+        }
+      });
+    </script>
+  </body> 
+</html>
